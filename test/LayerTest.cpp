@@ -20,7 +20,7 @@ UNIT(TestGetOutputAfterActivationFunction) {
     const unsigned int in_b = 1;
 
     auto test_layer = std::make_unique< Layer<num_t> >(
-        in_w+in_b, 4, "relu", false
+        in_w+in_b, 4, ACTIVATION_FUNCTIONS::RELU, false
     );
 
     std::vector< std::vector<num_t> > init_weights = {

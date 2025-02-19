@@ -13,7 +13,7 @@ UNIT(TestMSE) {
     d_vector deriv_out {0, 0, 0, 0};
 
     num_t loss = loss::MSE<num_t>(expected, actual, deriv_out, 1.);
-    
+
     ASSERT_TRUE(utils::is_close<num_t>(loss, 30.));
     for (unsigned int n = 0; n < deriv_out.size(); n++) {
         ASSERT_TRUE(utils::is_close<num_t>(deriv_out[n], expected_deriv[n]));
@@ -26,7 +26,7 @@ UNIT(TestLossFunctionsManager) {
 
     MLP_LOSS_FN loss::loss_func_t<num_t> loss_func;
 
-    bool function_found = loss_mgr.GetLossFunction("mse", &loss_func);
+    bool function_found = loss_mgr.GetLossFunction(loss::LOSS_FUNCTIONS::LOSS_MSE, &loss_func);
     ASSERT_TRUE(function_found);
     bool found_right_function = loss_func == &loss::MSE<num_t>;
     ASSERT_TRUE(found_right_function);
@@ -34,7 +34,7 @@ UNIT(TestLossFunctionsManager) {
     std::vector<num_t> loss_deriv{0};
     loss_func({0}, {0}, loss_deriv, 1.);
 
-    function_found = loss_mgr.GetLossFunction("invalid", &loss_func);
+    function_found = loss_mgr.GetLossFunction(static_cast<loss::LOSS_FUNCTIONS>(-1), &loss_func);
     ASSERT_FALSE(function_found);
 }
 

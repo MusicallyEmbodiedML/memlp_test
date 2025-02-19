@@ -8,6 +8,10 @@
 
 // Include unit tests as CPP!
 #include "test/MLPTest.cpp"
+#include "test/LayerTest.cpp"
+#include "test/NodeTest.cpp"
+#include "test/LossTest.cpp"
+#include "test/SerialiseTest.cpp"
 
 
 int main()

@@ -128,11 +128,11 @@ UNIT(SerialiseFromVector2d) {
 
 UNIT(SerialiseToVector2d) {
 
-    #if !(__XS3A__)
-        std::printf("Test not working on x86.\n");
-        ASSERT_TRUE(0);
-        return;
-    #endif
+    // #if !(__XS3A__)
+    //     std::printf("Test not working on x86.\n");
+    //     ASSERT_TRUE(0);
+    //     return;
+    // #endif
 
     const std::vector<uint8_t> buffer = {
         0x02, 0x00, 0x00, 0x00,  // col = 2
