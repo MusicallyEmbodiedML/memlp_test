@@ -61,7 +61,7 @@ UNIT(MLPLearnAND) {
     LOG(INFO) << "Trained with success." << std::endl;
 }
 
-#if 0
+
 UNIT(MLPLearnNAND) {
     LOG(INFO) << "Train NAND function with mlp." << std::endl;
 
@@ -668,7 +668,6 @@ UNIT(MLPMoveWeights) {
     compare_weights_neq(weights_2, weights_3);
 }
 
-#endif
 
 #if defined(MLPTEST_MAIN)
 
