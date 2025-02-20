@@ -210,3 +210,59 @@ UNIT(DatasetAddLabelLengthMismatch) {
     ASSERT_EQ((*features)[0], feature);
     ASSERT_EQ((*labels)[0], valid_label);
 }
+
+
+UNIT(GetFeaturesTest) {
+    // Create a small dataset
+    Dataset::DatasetVector features = {
+        {1.0f, 2.0f, 3.0f},
+        {4.0f, 5.0f, 6.0f}
+    };
+    Dataset::DatasetVector labels = {
+        {0.0f},
+        {1.0f}
+    };
+
+    // Initialize Dataset object
+    Dataset dataset(features, labels);
+
+    // Fetch features with bias
+    Dataset::DatasetVector features_with_bias = dataset.GetFeatures(true);
+
+    // Expected output with bias
+    Dataset::DatasetVector expected_with_bias = {
+        {1.0f, 2.0f, 3.0f, 1.0f},
+        {4.0f, 5.0f, 6.0f, 1.0f}
+    };
+
+    // Check that the number of feature vectors is correct
+    ASSERT_TRUE(features_with_bias.size() == expected_with_bias.size());
+
+    // Check that each feature vector matches the expected output with bias
+    for (size_t i = 0; i < expected_with_bias.size(); ++i) {
+        ASSERT_TRUE(features_with_bias[i].size() == expected_with_bias[i].size());
+        for (size_t j = 0; j < expected_with_bias[i].size(); ++j) {
+            ASSERT_TRUE(features_with_bias[i][j] == expected_with_bias[i][j]);
+        }
+    }
+
+    // Fetch features without bias
+    Dataset::DatasetVector features_without_bias = dataset.GetFeatures(false);
+
+    // Expected output without bias
+    Dataset::DatasetVector expected_without_bias = {
+        {1.0f, 2.0f, 3.0f},
+        {4.0f, 5.0f, 6.0f}
+    };
+
+    // Check that the number of feature vectors is correct
+    ASSERT_TRUE(features_without_bias.size() == expected_without_bias.size());
+
+    // Check that each feature vector matches the expected output without bias
+    for (size_t i = 0; i < expected_without_bias.size(); ++i) {
+        ASSERT_TRUE(features_without_bias[i].size() == expected_without_bias[i].size());
+        for (size_t j = 0; j < expected_without_bias[i].size(); ++j) {
+            ASSERT_TRUE(features_without_bias[i][j] == expected_without_bias[i][j]);
+        }
+    }
+}
