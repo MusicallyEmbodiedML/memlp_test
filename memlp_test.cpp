@@ -12,6 +12,7 @@
 #include "test/NodeTest.cpp"
 #include "test/LossTest.cpp"
 #include "test/SerialiseTest.cpp"
+#include "test/DatasetTest.cpp"
 
 
 int main()

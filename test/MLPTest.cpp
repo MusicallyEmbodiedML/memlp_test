@@ -62,6 +62,61 @@ UNIT(MLPLearnAND) {
 }
 
 
+UNIT(MLPLearnANDMiniBatch) {
+    LOG(INFO) << "Train AND function with mlp MiniBatchTrain()." << std::endl;
+
+    std::vector<std::vector<float>> column1 = {
+        {0.0f, 0.0f},
+        {0.0f, 1.0f},
+        {1.0f, 0.0f},
+        {1.0f, 1.0f},
+        {1.0f, 1.0f},
+        {1.0f, 1.0f}
+    };
+
+    std::vector<std::vector<float>> column2 = {
+        {0.0f},
+        {0.0f},
+        {0.0f},
+        {1.0f},
+        {1.0f},
+        {1.0f}
+    };
+    Dataset training_set(column1, column2);
+    auto features = training_set.GetFeatures();
+    auto labels = training_set.GetLabels();
+    MLP<num_t>::training_pair_t training_sample_set_with_bias(features, labels);
+
+    size_t num_features = training_set.GetFeatureSize();
+    size_t num_outputs = training_set.GetOutputSize();
+    MLP<num_t> my_mlp(
+        { num_features, 2 ,num_outputs },
+        { ACTIVATION_FUNCTIONS::SIGMOID, ACTIVATION_FUNCTIONS::LINEAR });
+    //Train MLP
+    my_mlp.MiniBatchTrain(training_sample_set_with_bias,
+                          0.5,  // lr
+                          150,  // iterations
+                          4,    // minibatch size
+                          0);   // min error cost
+
+    std::vector<num_t> *feat_ptr;
+    std::vector<num_t> *label_ptr;
+    for (size_t n = 0; n < features.size(); n++) {
+        std::vector<num_t> output;
+        feat_ptr = &features[n];
+        label_ptr = &labels[n];
+        my_mlp.GetOutput(*feat_ptr, &output);
+        for (size_t i = 0; i < num_outputs; i++) {
+            bool predicted_output = output[i] > 0.5 ? true : false;
+            bool correct_output = (*label_ptr)[0] > 0.5 ? true : false;
+            ASSERT_TRUE(predicted_output == correct_output);
+        }
+    }
+
+    LOG(INFO) << "Trained with success." << std::endl;
+}
+
+
 UNIT(MLPLearnNAND) {
     LOG(INFO) << "Train NAND function with mlp." << std::endl;
 
