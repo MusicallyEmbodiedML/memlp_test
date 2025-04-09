@@ -1,5 +1,6 @@
 #include "UnitTest.hpp"
 #include "Dataset.hpp"
+#include <algorithm>
 
 // A simple test case to check the Add function of the Dataset class
 UNIT(DatasetAddValidData) {
@@ -212,7 +213,7 @@ UNIT(DatasetAddLabelLengthMismatch) {
 }
 
 
-UNIT(GetFeaturesTest) {
+UNIT(DatasetGetFeatures) {
     // Create a small dataset
     Dataset::DatasetVector features = {
         {1.0f, 2.0f, 3.0f},
@@ -264,5 +265,152 @@ UNIT(GetFeaturesTest) {
         for (size_t j = 0; j < expected_without_bias[i].size(); ++j) {
             ASSERT_TRUE(features_without_bias[i][j] == expected_without_bias[i][j]);
         }
+    }
+}
+
+
+// Helper: Sort a DatasetVector (of single-element vectors) by the first element.
+static std::vector<std::vector<float>> sortFeatures(const Dataset::DatasetVector &features) {
+    auto sorted = features;
+    std::sort(sorted.begin(), sorted.end(),
+              [](const std::vector<float> &a, const std::vector<float> &b) {
+                  return a[0] < b[0];
+              });
+    return sorted;
+}
+
+UNIT(DatasetFIFO) {
+    // Enable replay memory, FIFO mode, and set maximum examples to 5.
+    Dataset ds;
+    ds.ReplayMemory(true);
+    ds.SetForgetMode(Dataset::FIFO);
+    ds.SetMaxExamples(5);
+
+    // Add 7 examples: feature = {i}, label = {i*10}.
+    for (int i = 0; i < 7; ++i) {
+        std::vector<float> feature = { static_cast<float>(i) };
+        std::vector<float> label   = { static_cast<float>(i * 10) };
+        bool added = ds.Add(feature, label);
+        ASSERT_TRUE(added);
+    }
+
+    // Sample without bias for easier checking.
+    auto samplePair = ds.Sample(false);
+    auto &sampledFeatures = samplePair.first;
+    auto &sampledLabels   = samplePair.second;
+    ASSERT_EQ(sampledFeatures.size(), size_t(5));
+    ASSERT_EQ(sampledLabels.size(), size_t(5));
+
+    // In FIFO mode, the first two examples (i==0,1) should be removed.
+    // The remaining examples (i==2,3,4,5,6) are expected.
+    std::vector<float> expected = { 2.f, 3.f, 4.f, 5.f, 6.f };
+
+    // Sort the sampled features so we can compare regardless of sample order.
+    auto sortedFeatures = sortFeatures(sampledFeatures);
+    ASSERT_EQ(sortedFeatures.size(), expected.size());
+    for (size_t i = 0; i < sortedFeatures.size(); ++i) {
+        // With bias disabled, each feature vector should have exactly one element.
+        ASSERT_EQ(sortedFeatures[i].size(), size_t(1));
+        ASSERT_EQ(sortedFeatures[i][0], expected[i]);
+    }
+
+    // Check that labels are consistent: label == feature * 10.
+    auto sortedLabels = sortFeatures(sampledLabels);
+    std::vector<float> expectedLabels;
+    for (float f : expected) {
+        expectedLabels.push_back(f * 10);
+    }
+    ASSERT_EQ(sortedLabels.size(), expectedLabels.size());
+    for (size_t i = 0; i < sortedLabels.size(); ++i) {
+        ASSERT_EQ(sortedLabels[i][0], expectedLabels[i]);
+    }
+}
+
+UNIT(DatasetRandomEqual) {
+    // Test RANDOM_EQUAL mode.
+    Dataset ds;
+    ds.ReplayMemory(true);
+    ds.SetForgetMode(Dataset::RANDOM_EQUAL);
+    ds.SetMaxExamples(5);
+
+    for (int i = 0; i < 7; ++i) {
+        std::vector<float> feature = { static_cast<float>(i) };
+        std::vector<float> label   = { static_cast<float>(i * 10) };
+        bool added = ds.Add(feature, label);
+        ASSERT_TRUE(added);
+    }
+    auto samplePair = ds.Sample(false);
+    auto &sampledFeatures = samplePair.first;
+    auto &sampledLabels   = samplePair.second;
+    ASSERT_EQ(sampledFeatures.size(), size_t(5));
+    ASSERT_EQ(sampledLabels.size(), size_t(5));
+
+    // For RANDOM_EQUAL, we can't predict which examples remain, but check each pair.
+    for (size_t i = 0; i < sampledFeatures.size(); ++i) {
+        float f = sampledFeatures[i][0];
+        float l = sampledLabels[i][0];
+        ASSERT_EQ(l, f * 10);
+        ASSERT_TRUE(f >= 0 && f <= 6);
+    }
+}
+
+UNIT(DatasetRandomOlder) {
+    // Test RANDOM_OLDER mode.
+    Dataset ds;
+    ds.ReplayMemory(true);
+    ds.SetForgetMode(Dataset::RANDOM_OLDER);
+    ds.SetMaxExamples(5);
+
+    for (int i = 0; i < 7; ++i) {
+        std::vector<float> feature = { static_cast<float>(i) };
+        std::vector<float> label   = { static_cast<float>(i * 10) };
+        bool added = ds.Add(feature, label);
+        ASSERT_TRUE(added);
+    }
+    auto samplePair = ds.Sample(false);
+    auto &sampledFeatures = samplePair.first;
+    auto &sampledLabels   = samplePair.second;
+    ASSERT_EQ(sampledFeatures.size(), size_t(5));
+    ASSERT_EQ(sampledLabels.size(), size_t(5));
+
+    for (size_t i = 0; i < sampledFeatures.size(); ++i) {
+        float f = sampledFeatures[i][0];
+        float l = sampledLabels[i][0];
+        ASSERT_EQ(l, f * 10);
+        ASSERT_TRUE(f >= 0 && f <= 6);
+    }
+}
+
+UNIT(DatasetSetMaxExamples) {
+    // Test SetMaxExamples() in non-replay-memory mode.
+    Dataset ds;
+    ds.ReplayMemory(false);
+    ds.SetMaxExamples(5);
+
+    // Add exactly 5 examples.
+    for (int i = 0; i < 5; ++i) {
+        std::vector<float> feature = { static_cast<float>(i) };
+        std::vector<float> label   = { static_cast<float>(i * 10) };
+        bool added = ds.Add(feature, label);
+        ASSERT_TRUE(added);
+    }
+    // With replay memory disabled, an extra Add() should fail.
+    {
+        std::vector<float> feature = { 100.f };
+        std::vector<float> label   = { 1000.f };
+        bool added = ds.Add(feature, label);
+        ASSERT_TRUE(!added);
+    }
+    // Now, reduce the maximum to 3. This should trim the dataset from the end.
+    ds.SetMaxExamples(3);
+    auto samplePair = ds.Sample(false);
+    auto &sampledFeatures = samplePair.first;
+    auto &sampledLabels   = samplePair.second;
+    ASSERT_EQ(sampledFeatures.size(), size_t(3));
+    ASSERT_EQ(sampledLabels.size(), size_t(3));
+    // Expect the dataset now contains the first three examples.
+    for (size_t i = 0; i < sampledFeatures.size(); ++i) {
+        ASSERT_EQ(sampledFeatures[i][0], static_cast<float>(i));
+        ASSERT_EQ(sampledLabels[i][0], static_cast<float>(i * 10));
     }
 }
