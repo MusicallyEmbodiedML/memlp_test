@@ -733,3 +733,136 @@ int main(int argc, char* argv[]) {
 }
 
 #endif    // MLPTEST_MAIN
+
+UNIT(MLPLearnXORCategoricalCrossEntropy) {
+    LOG(INFO) << "Train XOR function with MLP using categorical cross-entropy." << std::endl;
+
+    // XOR training data with one-hot encoded outputs for 2-class classification
+    std::vector<TrainingSample<num_t>> training_set =
+    {
+        { { 0, 0 }, { 1.0, 0.0 } },  // Class 0: XOR output = 0
+        { { 0, 1 }, { 0.0, 1.0 } },  // Class 1: XOR output = 1
+        { { 1, 0 }, { 0.0, 1.0 } },  // Class 1: XOR output = 1
+        { { 1, 1 }, { 1.0, 0.0 } }   // Class 0: XOR output = 0
+    };
+
+    bool bias_already_in = false;
+    std::vector<TrainingSample<num_t>> training_sample_set_with_bias(training_set);
+    //set up bias
+    if (!bias_already_in) {
+        for (auto & training_sample_with_bias : training_sample_set_with_bias) {
+            training_sample_with_bias.AddBiasValue(1);
+        }
+    }
+
+    size_t num_features = training_sample_set_with_bias[0].GetInputVectorSize();
+    size_t num_outputs = training_sample_set_with_bias[0].GetOutputVectorSize();
+
+    // Create MLP with larger hidden layer for better learning capacity
+    MLP<num_t> my_mlp(
+        { num_features, 4, num_outputs },  // Increased hidden nodes from 2 to 4
+        { ACTIVATION_FUNCTIONS::SIGMOID, ACTIVATION_FUNCTIONS::LINEAR },
+        loss::LOSS_FUNCTIONS::LOSS_CATEGORICAL_CROSSENTROPY
+    );
+
+    //Train MLP with higher learning rate and more lenient stopping criterion
+    my_mlp.Train(training_sample_set_with_bias, 3.0, 1000, 0.1);  // lr=3.0, max_iter=1000, min_cost=0.1
+
+    // Test the trained network
+    for (const auto & training_sample : training_sample_set_with_bias) {
+        std::vector<num_t> output;
+        size_t predicted_class;
+
+        // Get output in inference mode (should return probabilities due to softmax)
+        my_mlp.GetOutput(training_sample.input_vector(), &output, nullptr, true);
+
+        // Verify outputs are probabilities (should sum to ~1.0)
+        num_t prob_sum = output[0] + output[1];
+        ASSERT_TRUE(utils::is_close<num_t>(prob_sum, 1.0));
+
+        // Get predicted class
+        my_mlp.GetOutputClass(output, &predicted_class);
+
+        // Determine correct class from one-hot encoded label
+        size_t correct_class = (training_sample.output_vector()[0] > 0.5) ? 0 : 1;
+
+        ASSERT_TRUE(predicted_class == correct_class);
+
+        // Also verify that the network returns raw logits during training mode
+        std::vector<num_t> logits;
+        my_mlp.GetOutput(training_sample.input_vector(), &logits, nullptr, false);
+
+        // Logits should be different from probabilities
+        bool logits_different = false;
+        for (size_t i = 0; i < logits.size(); i++) {
+            if (!utils::is_close<num_t>(logits[i], output[i])) {
+                logits_different = true;
+                break;
+            }
+        }
+        ASSERT_TRUE(logits_different);
+    }
+
+    LOG(INFO) << "Trained with success using categorical cross-entropy." << std::endl;
+}
+
+UNIT(MLPLearnXORCategoricalCrossEntropyMiniBatch) {
+    LOG(INFO) << "Train XOR function with MLP using categorical cross-entropy and mini-batch." << std::endl;
+
+    // Convert to training_pair_t format for mini-batch training
+    std::vector<std::vector<num_t>> features = {
+        {0, 0, 1},  // including bias
+        {0, 1, 1},
+        {1, 0, 1},
+        {1, 1, 1}
+    };
+
+    std::vector<std::vector<num_t>> labels = {
+        {1.0, 0.0},  // Class 0: XOR output = 0
+        {0.0, 1.0},  // Class 1: XOR output = 1
+        {0.0, 1.0},  // Class 1: XOR output = 1
+        {1.0, 0.0}   // Class 0: XOR output = 0
+    };
+
+    MLP<num_t>::training_pair_t training_data(features, labels);
+
+    size_t num_features = features[0].size();
+    size_t num_outputs = labels[0].size();
+
+    // Create MLP with larger hidden layer and categorical cross-entropy
+    MLP<num_t> my_mlp(
+        { num_features, 6, num_outputs },  // Increased hidden nodes from 3 to 6
+        { ACTIVATION_FUNCTIONS::SIGMOID, ACTIVATION_FUNCTIONS::LINEAR },
+        loss::LOSS_FUNCTIONS::LOSS_CATEGORICAL_CROSSENTROPY
+    );
+
+    // Train with mini-batch using higher learning rate and more lenient stopping
+    my_mlp.MiniBatchTrain(training_data,
+                          5.0,   // learning rate increased from 0.8 to 5.0
+                          500,   // max iterations increased from 200 to 500
+                          2,     // mini-batch size
+                          0.15); // min error cost relaxed from 0.01 to 0.15
+
+    // Test the trained network
+    for (size_t i = 0; i < features.size(); i++) {
+        std::vector<num_t> output;
+        size_t predicted_class;
+
+        // Get output in inference mode
+        my_mlp.GetOutput(features[i], &output);
+
+        // Verify probabilities sum to 1
+        num_t prob_sum = output[0] + output[1];
+        ASSERT_TRUE(utils::is_close<num_t>(prob_sum, 1.0));
+
+        // Get predicted class
+        my_mlp.GetOutputClass(output, &predicted_class);
+
+        // Determine correct class
+        size_t correct_class = (labels[i][0] > 0.5) ? 0 : 1;
+
+        ASSERT_TRUE(predicted_class == correct_class);
+    }
+
+    LOG(INFO) << "Mini-batch trained with success using categorical cross-entropy." << std::endl;
+}
