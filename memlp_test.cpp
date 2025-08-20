@@ -1,6 +1,9 @@
 #include <iostream>
+
+#ifndef LINUX
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
+#endif
 
 #include "microunit.h"
 #include "easylogging++.h"
@@ -14,10 +17,28 @@
 #include "test/SerialiseTest.cpp"
 #include "test/DatasetTest.cpp"
 
+#ifdef LINUX
+
+int main(int argc, char *argv[])
+{
+    // Initialise the logger
+    START_EASYLOGGINGPP(argc, argv);
+
+    // Run unit tests
+    bool tests_passed = microunit::UnitTester::Run();
+
+    return tests_passed ? 0 : 1;  // Return 0 if all tests passed, otherwise 1
+}
+
+#else
 
 int main()
 {
     stdio_init_all();
+
+    // For Pico, create dummy argc/argv for easylogging
+    int argc = 1;
+    char* argv[] = {(char*)"memlp_test", nullptr};
     START_EASYLOGGINGPP(argc, argv);
 
     // Initialise the Wi-Fi chip
@@ -50,3 +71,5 @@ int main()
 
     return 0;  // Should never return
 }
+
+#endif // LINUX
