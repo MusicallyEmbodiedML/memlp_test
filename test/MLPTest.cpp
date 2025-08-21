@@ -425,6 +425,8 @@ UNIT(MLPLearnX2_MiniBatch) {
     my_mlp.MiniBatchTrain(trainingSet, 0.5, 50, 2, 0.);
 
     LOG(INFO) << "Trained with success." << std::endl;
+
+    ASSERT_TRUE(true);
 }
 
 
@@ -525,7 +527,7 @@ UNIT(MLPGetWeightsSetWeights) {
             ASSERT_TRUE(new_weights[n].size() == weights[n].size());        \
             for (unsigned int k = 0; k < new_weights[n].size(); k++) {        \
                     if (((new_weights[n][k].size() != weights[n][k].size()))) {        \
-                            std::printf("new_weights[%d][%d].size() = %d, weights[same].size() = %d\n", n, k, new_weights[n][k].size(), weights[n][k].size());        \
+                            std::printf("new_weights[%d][%d].size() = %zu, weights[same].size() = %zu\n", n, k, new_weights[n][k].size(), weights[n][k].size());        \
                     }        \
                     ASSERT_TRUE(new_weights[n][k].size() == weights[n][k].size());        \
                     for (unsigned int j = 0; j < new_weights[n][k].size(); j++) {        \

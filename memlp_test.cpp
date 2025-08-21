@@ -19,7 +19,7 @@
 
 #ifdef LINUX
 
-int main(int [[maybe_unused]] argc, char* [[maybe_unused]] argv[])
+int main(int, char**)
 {
     // Initialise the logger
     START_EASYLOGGINGPP(argc, argv);
