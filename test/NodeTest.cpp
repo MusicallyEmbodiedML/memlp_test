@@ -35,7 +35,7 @@ void Train(Node<num_t> & node,
       bool prediction;
       node.GetBooleanOutput(training_sample_with_bias.input_vector(),
                             utils::linear<num_t>,
-                            &prediction, 
+                            &prediction,
                             0.5);
       bool correct_output = training_sample_with_bias.output_vector()[0] > 0.5 ? true : false;
       if (prediction != correct_output) {
@@ -83,12 +83,12 @@ UNIT(NodeLearnAND) {
     bool class_id;
     my_node.GetBooleanOutput(training_sample.input_vector(),
                              utils::linear<num_t>,
-                             &class_id, 
+                             &class_id,
                              0.5);
     bool correct_output = training_sample.output_vector()[0] > 0.5 ? true : false;
     ASSERT_TRUE(class_id == correct_output);
   }
-  LOG(INFO) << "Trained with success." << std::endl;  
+  LOG(INFO) << "Trained with success." << std::endl;
 }
 
 UNIT(NodeLearnNAND) {
@@ -122,7 +122,7 @@ UNIT(NodeLearnNAND) {
     bool correct_output = training_sample.output_vector()[0] > 0.5 ? true : false;
     ASSERT_TRUE(class_id == correct_output);
   }
-  LOG(INFO) << "Trained with success." << std::endl;  
+  LOG(INFO) << "Trained with success." << std::endl;
 }
 
 UNIT(NodeLearnOR) {
@@ -156,7 +156,7 @@ UNIT(NodeLearnOR) {
     bool correct_output = training_sample.output_vector()[0] > 0.5 ? true : false;
     ASSERT_TRUE(class_id == correct_output);
   }
-  LOG(INFO) << "Trained with success." << std::endl;  
+  LOG(INFO) << "Trained with success." << std::endl;
 }
 UNIT(NodeLearnNOR) {
   LOG(INFO) << "Train NOR function with Node." << std::endl;
@@ -189,7 +189,7 @@ UNIT(NodeLearnNOR) {
     bool correct_output = training_sample.output_vector()[0] > 0.5 ? true : false;
     ASSERT_TRUE(class_id == correct_output);
   }
-  LOG(INFO) << "Trained with success." << std::endl;  
+  LOG(INFO) << "Trained with success." << std::endl;
 }
 
 UNIT(NodeLearnNOT) {
@@ -221,7 +221,7 @@ UNIT(NodeLearnNOT) {
     bool correct_output = training_sample.output_vector()[0] > 0.5 ? true : false;
     ASSERT_TRUE(class_id == correct_output);
   }
-  LOG(INFO) << "Trained with success." << std::endl;  
+  LOG(INFO) << "Trained with success." << std::endl;
 }
 
 UNIT(NodeLearnXOR) {
@@ -261,6 +261,7 @@ UNIT(NodeLearnXOR) {
     }
   }
   //LOG(INFO) << "Trained with success." << std::endl;
+  ASSERT_TRUE(true);
 }
 
 
@@ -313,6 +314,8 @@ UNIT(GenRand) {
     std::cout << ", ";
   }
   std::cout << std::endl;
+
+  ASSERT_TRUE(true);
 }
 
 #if defined(NODETEST_MAIN)

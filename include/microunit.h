@@ -162,13 +162,13 @@ namespace microunit {
 
 /** @brief Operator to allow using SaveColor class with an ostream */
 inline std::ostream& operator<<(std::ostream& os,
-  const microunit::SaveColor& obj) {
+  const microunit::SaveColor& [[maybe_unused]] obj) {
   return os;
 }
 
 /** @brief Operator to allow using EndingLineBreak class with an ostream */
 inline std::ostream& operator<<(std::ostream& os,
-  const microunit::EndingLineBreak& obj) {
+  const microunit::EndingLineBreak& [[maybe_unused]] obj) {
   return os;
 }
 
