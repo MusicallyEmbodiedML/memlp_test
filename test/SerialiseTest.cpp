@@ -8,15 +8,15 @@
 #include <cstdio>
 
 void dump_buffers(const unsigned char *expected,
-        const unsigned char *actual, size_t size) {
+        const unsigned char *actual, uint32_t size) {
 
     std::printf("~~~ Buffer dump ~~~\n");
 
-    size_t rows = size >> 2;
-    size_t last_row = size - (rows << 2);
+    uint32_t rows = size >> 2;
+    uint32_t last_row = size - (rows << 2);
     // All rows but last
     for (unsigned int row = 0; row < rows; row++) {
-        size_t elements_consumed = (row << 2);
+        uint32_t elements_consumed = (row << 2);
         const unsigned char *exp_ptr = expected + elements_consumed;
         const unsigned char *act_ptr = actual + elements_consumed;
         std::printf("- Positions %d-%d -\n", elements_consumed, elements_consumed+4);
@@ -26,7 +26,7 @@ void dump_buffers(const unsigned char *expected,
             *act_ptr, *(act_ptr+1), *(act_ptr+2), *(act_ptr+3));
     }
     // Last row
-    size_t elements_consumed = (rows<<2);
+    uint32_t elements_consumed = (rows<<2);
     if (elements_consumed < size) {
     std::printf("- Row %d -\n", elements_consumed+2);
     const unsigned char *exp_ptr = expected + elements_consumed;
@@ -65,7 +65,7 @@ UNIT(SerialiseFromVector2d) {
         0x00, 0x00, 0xc0, 0x40   // 6
     };
 
-    size_t w_head = 0;
+    uint32_t w_head = 0;
     w_head = Serialise::FromVector2D(w_head, vec_in, buffer);
 
     ASSERT_TRUE(w_head == buffer.size());
@@ -150,7 +150,7 @@ UNIT(SerialiseToVector2d) {
     };
     std::vector< std::vector<float> > vec_out;
 
-    size_t r_head = 0;
+    uint32_t r_head = 0;
     r_head = Serialise::ToVector2D<float>(r_head, buffer, vec_out);
 
     ASSERT_TRUE(r_head == buffer.size());

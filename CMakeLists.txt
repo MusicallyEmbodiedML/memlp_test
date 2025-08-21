@@ -80,7 +80,7 @@ else()
     add_compile_definitions(LINUX)
     add_compile_definitions(__force_inline=)  # GCC compatibility for inline hints
     if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options(-Wall -Wextra -O2)
+        add_compile_options(-Wall -Wextra -O0 -g3 -fno-inline -fno-omit-frame-pointer -fno-optimize-sibling-calls)
     endif()
 endif()
 

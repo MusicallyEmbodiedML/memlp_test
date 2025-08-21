@@ -766,7 +766,7 @@ UNIT(MLPLearnXORCategoricalCrossEntropy) {
     );
 
     //Train MLP with higher learning rate and more lenient stopping criterion
-    my_mlp.Train(training_sample_set_with_bias, 3.0, 1000, 0.1);  // lr=3.0, max_iter=1000, min_cost=0.1
+    my_mlp.Train(training_sample_set_with_bias, 3.0, 10000, 0.001);  // lr=3.0, max_iter=1000, min_cost=0.1
 
     // Test the trained network
     for (const auto & training_sample : training_sample_set_with_bias) {
